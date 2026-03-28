@@ -3,3 +3,4 @@ subject: Bob, file_1: np, file_2: np, file_3: r, file_4: r, file_5: r/w
 subject: Charlie, file_1: np, file_2: np, file_3: np, file_4: r/w, file_5: r/w
 subject: Daisy, file_1: r, file_2: r, file_3: r/w, file_4: r, file_5: np
 subject: Emmy, file_1: np, file_2: np, file_3: np, file_4: np, file_5: np
+subject: James, file_1: np, file_2: np, file_3: np, file_4: np, file_5: np
