@@ -1,4 +1,95 @@
 import sys
+import os
+
+def permission_matrix(filename):
+    user_database = {}
+    try:
+        if not os.path.exists(filename):
+            return{}
+        with open('MAC.txt', 'r') as file:
+            for line in file:
+                line = line.strip()
+                if not line: continue                
+
+                split_line = [s.strip() for s in line.split(',')]
+                subject = split_line[0].split(':')
+                if len(subject) < 2: continue
+                username = subject[1].strip()
+
+                user_permissions = {}
+                for perms in split_line[1:]:
+                    if ':' in perms:
+                        file_name, file_perm = perms.split(':')
+                        user_permissions[file_name.strip()] = file_perm.strip()
+
+                user_database[username] = user_permissions
+    except FileNotFoundError:
+        print("Error. File not found.")
+    return user_database
+
+def regular_user_menu(username, permissions):
+    while True:
+        print(f"----- User: {username} -----")
+        print("1. Check file permissions.")
+        print("2. Read File.")
+        print("3. Edit File")
+        print("4. Exit")
+
+        choice = input("Select an option: ")
+
+        if choice == '1':
+            for file, file_perm in permissions.items():
+                print(f"File name: {file} - Permission: {file_perm}")
+
+        elif choice == '2':
+            target_file = input("Enter File to READ (i.e. file_1): ").strip()
+            if target_file in permissions:
+
+                if 'r' in permissions[target_file]:
+                    print(f"ACCESS GRANTED: Opening {target_file}-----\n")
+                    try: 
+                        with open(f"{target_file}.txt", "r") as file:
+                            print(f"-----{target_file}-----")
+                            print(file.read())
+                            print("-" * 50)
+                    except FileNotFoundError:
+                        print("Error. File not found.")
+                else:
+                    print(f"ACCESS DENIED: No permissions granted to {target_file}.")
+            else:
+                print("File not found.")
+
+        elif choice == '3':
+            target_file = input("Enter File to EDIT (i.e. file_1): ").strip()
+            if target_file in permissions:
+                if 'w' in permissions[target_file]:
+                    new_content = input(f"ACCESS GRANTED: Enter new data for {target_file}:\n")
+                    try:
+                        with open(f"{target_file}.txt", "a") as file:
+                            file.write(new_content + "\n")
+                        print(f"Entry added to {target_file}")
+                    except Exception as e:
+                        print(f"Could not write to file {e}")
+                else:
+                    print(f"ACCESS DENIED: You do not have write permissions for {target_file}")
+            else:
+                print("File not found.")
+        
+        elif choice == '4':
+            print("Exiting session-----")
+            break
+
+def regular_sign_in():
+    db = load_database('MAC.txt')
+    username_entry = input("Enter Subject Name: ").strip()
+
+    if username_entry in db:
+        print(f"Access Granted to: {username_entry}")
+        regular_user_menu(username_entry, db[username_entry])
+    else:
+        print("User not found.")
+
+
 
 def view_table():
     file = open('MAC.txt')
@@ -9,7 +100,7 @@ def view_table():
     print(results)
     print("-" * 79)
 
-def sign_in():
+def admin_sign_in():
     admin_username = "admin"
     print("-----Admin Login-----")
     while True:
@@ -36,15 +127,6 @@ def add_new_user():
         file.write(new_line_entry + "\n")
     print(f"User {input_new_user} successfully added.\n")
     print("-" * 79)
-    # input_file1 = input('Please enter one of the above permission levels for File 1 access regarding ' + input_new_user + ': ').strip()
-    # input_file2 = input('Please enter one of the above permission levels for File 2 access regarding ' + input_new_user + ': ').strip()
-    # input_file3 = input('Please enter one of the above permission levels for File 3 access regarding ' + input_new_user + ': ').strip()
-    # input_file4 = input('Please enter one of the above permission levels for File 4 access regarding ' + input_new_user + ': ').strip()
-    # input_file5 = input('Please enter one of the above permission levels for File 5 access regarding ' + input_new_user + ': ').strip()
-
-    # with open('MAC.txt', 'a') as file:
-    #     file.write("\nsubject: " + input_new_user + ", file_1: " + input_file1 + ", file_2: " + input_file2 + ", file_3: " + input_file3 + ", file_4: " + input_file4 + ", file_5: " + input_file5)
-        
     
 def check_file_access():
     print("You have chosen to verify a user's access")
@@ -74,31 +156,51 @@ def check_file_access():
         print("MAC.txt not found.")
 
 def main():
-    if sign_in():
+    while True:
+        print("-" * 25 + " MAC ACCESS " + "-" * 20)
+        print("1. User Sign In")
+        print("2. Admin Sign In")
+        print("3. Exit")
+        print("-" * 75)
 
-        while True:
-            print("-----------------------------------------------------------------------------------------------------------------------------------------------------------------") 
-            print("Please select an action:")
-            print("1. Admin Sign In.")
-            print("2. Add New User.")
-            print("3. View MAC file.")
-            print("4. Check a user's file permissions.")        
-            print("5. Select a new user to test against ABAC policy.")
-            print("6. Exit.")
-            print("-----------------------------------------------------------------------------------------------------------------------------------------------------------------")
-            choice = input("Please enter 1, 2, 3, 4, 5, or 6: ")
-            
-            if choice == '2':
-                add_new_user()
-            elif choice == '3':
-                view_table()
-            elif choice == '4':
-                check_file_access()
-            elif choice == '6':
-                exit()
+        sign_in_choice = input("Enter your selection: ")
+
+        if sign_in_choice == '1':
+            db = permission_matrix('MAC.txt')
+            subject_selection = input("Enter Your Username: ").strip()
+            if subject_selection in db:
+                print(f"-----Welcome {subject_selection}-----")
+                regular_user_menu(subject_selection, db[subject_selection])
             else:
-                print("Invalid selection. Please enter 1, 2, 3, 4, 5, or 6.")
+                print("User not found.")
 
+        elif sign_in_choice == '2':
+            if admin_sign_in():
+                while True:
+                    print("-----------------------------------------------------------------------------------------------------------------------------------------------------------------") 
+                    print("Please select an action:")
+                    print("1. Admin Sign In.")
+                    print("2. Add New User.")
+                    print("3. View MAC file.")
+                    print("4. Check a user's file permissions.")        
+                    print("5. Log Out.")
+                    print("-----------------------------------------------------------------------------------------------------------------------------------------------------------------")
+                    choice = input("Please enter 1, 2, 3, 4, 5, or 6: ")
+                    
+                    if choice == '2':
+                        add_new_user()
+                    elif choice == '3':
+                        view_table()
+                    elif choice == '4':
+                        check_file_access()
+                    elif choice == '5':
+                        print("Signing Out.")
+                        break
+                    else:
+                        print("Invalid selection. Please enter 1, 2, 3, 4, 5, or 6.")
+
+        elif sign_in_choice == '3':
+            sys.exit()
 
 main()
 
