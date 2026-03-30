@@ -1,15 +1,17 @@
-import sys
 
-def permission_matrix(filename):
+
+def permission_matrix(macfile):
     user_database = {}
     try:
-        with open('MAC.txt', 'r') as file:
+        with open(macfile, 'r') as file:
             for line in file:
                 line = line.strip()
                 if not line: continue                
 
                 split_line = [s.strip() for s in line.split(',')]
+
                 subject = split_line[0].split(':')
+                
                 if len(subject) < 2: continue
                 username = subject[1].strip()
 
@@ -103,7 +105,7 @@ def admin_sign_in():
     while True:
         credentials = input("Please enter your admin username, or enter 'Q' to exit the system:\n").strip()
         if credentials.upper() == 'Q':
-            sys.exit()        
+            exit()        
         elif credentials == admin_username:
             print("Admin Access Granted.\n")
             return True
@@ -153,24 +155,61 @@ def check_file_access():
         print("MAC.txt not found.")
 
 def edit_user_permissions():
-    print("----- Permissions Editing -----")
-    select_user_to_edit = input("Please enter the name of the user you wish to edit:\n").strip()
-    select_file_to_edit = input("Please enter the name of the file permissions you wish to edit (i.e. file_1, file_2): ").strip()
-    input_new_permissions = input(f"Please enter the new permissions for {select_file_to_edit}: ")
-    with open('MAC.txt', 'a') as file:
-        for line in file:
+    print("----- Permission Editing -----") 
+    db = permission_matrix('MAC.txt')
+    permission_options = ['r', 'r/w', 'np']
+    
+    while True:
+        select_user_to_edit = input("Please enter the name of the User you wish to edit (or type quit to return to previous menu): ").strip()
+        if select_user_to_edit == 'quit':
+            return
+        if select_user_to_edit in db:
+            break
+        else:
+            print(f"{select_user_to_edit} not found in MAC.txt")
+
+    while True:
+        select_file_to_edit = input(f"Please enter the file name you would like to edit permissions for (i.e. file_1, file_2), or enter C to change users: ").strip()
+        if select_file_to_edit == 'C':
+            return    
+        if select_file_to_edit in db[select_user_to_edit]:
+            break
+        else:
+            print(f"{select_file_to_edit} does not exit, please enter a new an existing file name (i.e. file_1, file_2): ")
+    
+    while True:
+        input_new_permissions = input(f"Enter new permissions for {select_user_to_edit} regarding {select_file_to_edit} (available options - r, r/w, np): ")
+        if input_new_permissions in permission_options:
+            break
+        else:
+            print(f"{input_new_permissions} is not a valid option, please enter one of the following valid options - r, r/w, np.")
+        
+    try:
+        with open('MAC.txt', 'r') as file:
+            maclines = file.readlines()
+        mac_line_update = []
+        for line in maclines:
             if f"subject: {select_user_to_edit}" in line:
-                if line.startswith(select_file_to_edit):
-                    input_new_permissions.append(f"{select_file_to_edit}: {input_new_permissions}")
-                else:
-                    print("File not found.")
-                    return
+                line_parts = [p.strip() for p in line.split(',')]
+                updated_line = []
+
+                for part in line_parts:
+                    if part.startswith(f"{select_file_to_edit}:"):
+                        updated_line.append(f"{select_file_to_edit}: {input_new_permissions}")
+                    else:
+                        updated_line.append(part)
+
+                mac_line_update.append(", ".join(updated_line) + "\n")
             else:
-                print("User not found.")
-                return    
-            
-    print(f"User {input_new_user} successfully added.\n")
-    print("-" * 79)
+                mac_line_update.append(line)
+
+        with open('MAC.txt', 'w') as file:
+            file.writelines(mac_line_update)
+            print("Permissions successfully updated.")
+            print("-" * 79)
+    except Exception as e:
+        print(f"There was an error when writing {e}")
+        print("-" * 79)
 
 
 def main():
@@ -204,7 +243,7 @@ def main():
                     print("4. Check a user's file permissions.")        
                     print("5. Log Out.")
                     print("-----------------------------------------------------------------------------------------------------------------------------------------------------------------")
-                    choice = input("Please enter 1, 2, 3, 4, 5, or 6: ")
+                    choice = input("Please enter 1, 2, 3, 4, or 5: ")
                     
                     if choice == '1':
                         add_new_user()
@@ -221,7 +260,7 @@ def main():
                         print("Invalid selection. Please enter 1, 2, 3, 4, 5, or 6.")
 
         elif sign_in_choice == '3':
-            sys.exit()
+            exit()
 
 main()
 
