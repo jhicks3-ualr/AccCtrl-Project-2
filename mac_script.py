@@ -1,11 +1,8 @@
 import sys
-import os
 
 def permission_matrix(filename):
     user_database = {}
     try:
-        if not os.path.exists(filename):
-            return{}
         with open('MAC.txt', 'r') as file:
             for line in file:
                 line = line.strip()
@@ -80,7 +77,7 @@ def regular_user_menu(username, permissions):
             break
 
 def regular_sign_in():
-    db = load_database('MAC.txt')
+    db = permission_matrix('MAC.txt')
     username_entry = input("Enter Subject Name: ").strip()
 
     if username_entry in db:
@@ -132,7 +129,7 @@ def check_file_access():
     print("You have chosen to verify a user's access")
     selected_user = input("Please enter a username to check their access: \n").strip()   
     selected_file = input("Please select the file you would like to check access for (i.e. file_1, file_2):\n").strip()
-
+    
     try: 
         with open ('MAC.txt', 'r') as file:
             for line in file:
@@ -155,6 +152,27 @@ def check_file_access():
     except FileNotFoundError:
         print("MAC.txt not found.")
 
+def edit_user_permissions():
+    print("----- Permissions Editing -----")
+    select_user_to_edit = input("Please enter the name of the user you wish to edit:\n").strip()
+    select_file_to_edit = input("Please enter the name of the file permissions you wish to edit (i.e. file_1, file_2): ").strip()
+    input_new_permissions = input(f"Please enter the new permissions for {select_file_to_edit}: ")
+    with open('MAC.txt', 'a') as file:
+        for line in file:
+            if f"subject: {select_user_to_edit}" in line:
+                if line.startswith(select_file_to_edit):
+                    input_new_permissions.append(f"{select_file_to_edit}: {input_new_permissions}")
+                else:
+                    print("File not found.")
+                    return
+            else:
+                print("User not found.")
+                return    
+            
+    print(f"User {input_new_user} successfully added.\n")
+    print("-" * 79)
+
+
 def main():
     while True:
         print("-" * 25 + " MAC ACCESS " + "-" * 20)
@@ -166,31 +184,34 @@ def main():
         sign_in_choice = input("Enter your selection: ")
 
         if sign_in_choice == '1':
-            db = permission_matrix('MAC.txt')
-            subject_selection = input("Enter Your Username: ").strip()
-            if subject_selection in db:
-                print(f"-----Welcome {subject_selection}-----")
-                regular_user_menu(subject_selection, db[subject_selection])
-            else:
-                print("User not found.")
+            if regular_sign_in():
+                db = permission_matrix('MAC.txt')
+                subject_selection = input("Enter Your Username: ").strip()
+                if subject_selection in db:
+                    print(f"-----Welcome {subject_selection}-----")
+                    regular_user_menu(subject_selection, db[subject_selection])
+                else:
+                    print("User not found.")
 
         elif sign_in_choice == '2':
             if admin_sign_in():
                 while True:
                     print("-----------------------------------------------------------------------------------------------------------------------------------------------------------------") 
                     print("Please select an action:")
-                    print("1. Admin Sign In.")
-                    print("2. Add New User.")
-                    print("3. View MAC file.")
+                    print("1. Add New User.")
+                    print("2. View MAC file.")
+                    print("3. Edit User File Permissiosn.")
                     print("4. Check a user's file permissions.")        
                     print("5. Log Out.")
                     print("-----------------------------------------------------------------------------------------------------------------------------------------------------------------")
                     choice = input("Please enter 1, 2, 3, 4, 5, or 6: ")
                     
-                    if choice == '2':
+                    if choice == '1':
                         add_new_user()
-                    elif choice == '3':
+                    elif choice == '2':
                         view_table()
+                    elif choice == '3':
+                        edit_user_permissions()
                     elif choice == '4':
                         check_file_access()
                     elif choice == '5':
