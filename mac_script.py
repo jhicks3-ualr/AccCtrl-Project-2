@@ -1,4 +1,4 @@
-
+#this function is called by others and uses the macfile parameter to setup a user database for reading and storing the database as a dictionary.
 def permission_matrix(macfile):
     user_database = {}
     try:
@@ -19,7 +19,7 @@ def permission_matrix(macfile):
     except FileNotFoundError:
         print("Error. File not found.")
     return user_database
-
+#this is a menu for the regular users that uses the username and permissions parameters to check a user's access when a specific file is opened for any given option
 def regular_user_menu(username, permissions):
     while True:
         print(f" USER SESSION: {username} ".center(120, '-'))
@@ -51,6 +51,7 @@ def regular_user_menu(username, permissions):
                                 print("Error. File not found.")
                         else:
                             print(f"ACCESS DENIED: No permissions granted to {target_file}.")
+                            print("-" * 120)
                     elif target_file.lower() == 'back':
                         break
                     else:
@@ -84,35 +85,14 @@ def regular_user_menu(username, permissions):
                 exit()
             case _:
                 print("Invalid option. Please enter 1, 2, 3, 4, or 5.")
-
-def sign_in():
-    while True:
-        db = permission_matrix('MAC.txt')
-        print(" User Sign In ".center(120,'-'))
-        username_entry = input("Enter a Username from the MAC.txt File, 'admin' for the admin menu, 'back' to return to the previous menu, or 'exit' to Exit:\n").strip()
-        match username_entry:
-            case _ if username_entry in db:
-                print(f" Access Granted. Welcome: {username_entry} ".center(120, '-'))
-                print("-" * 120)
-                regular_user_menu(username_entry, db[username_entry])
-            case _ if username_entry.lower() == 'admin':
-                print("Admin Access Granted.")
-                admin_menu()
-            case 'back':
-                return
-            case 'exit':
-                print("[TERMINATING SESSION]".center(120, '*'))
-                exit()
-            case _:
-                print("User not found.")
-
+#this function simply prints the MAC.txt file for the admin menu function
 def view_table():
     file = open('MAC.txt')
     results = file.read()
     print(" Current MAC Table ".center(120,'-'))
     print(results)
     print("-" * 120)
-
+#this file opens the MAC.txt file, and adds a new line with a new user and file permissions for the admin menu function
 def add_new_user():
     print(" ADDING NEW USER ".center(120,'-'))
     input_new_user = input("Please enter the name of the new user:\n").strip()
@@ -130,7 +110,7 @@ def add_new_user():
         file.write(new_line_entry + "\n")
     print(f"User {input_new_user} successfully added.")
     print("-" * 120)
-    
+#this function opens and reads the MAC.txt file to check on a specific user' specific file access for the admin menu function
 def check_file_access():
     print(" VERIFYING FILE ACCESSS ".center(120,'-'))
     selected_user = input("Please enter a username to check their access: \n").strip()   
@@ -154,7 +134,7 @@ def check_file_access():
             print("User not found.")
     except FileNotFoundError:
         print("MAC.txt not found.")
-
+#this function opens and edits a specific user's file permissions for a specific file, this is called by the admin menu function
 def edit_user_permissions():
     print(" EDITING PERMISSIONS ".center(120,'-')) 
     db = permission_matrix('MAC.txt')
@@ -207,7 +187,7 @@ def edit_user_permissions():
     except Exception as e:
         print(f"There was an error when writing {e}")
         print("-" * 120)
-
+#this function opens and deletes a user from the MAC.txt file, this is called by the admin menu
 def remove_user():
     print(" DELETE USER ".center(120,'-')) 
     db = permission_matrix('MAC.txt')
@@ -231,7 +211,7 @@ def remove_user():
             print("-" * 120)
     except Exception as e:
         print(f"An error has occured: {e}")
-
+#this is the admin menu that is used by the user signs in as an admin
 def admin_menu():
     while True:
         print(" ADMIN SESSION ".center(120,'-')) 
@@ -264,23 +244,28 @@ def admin_menu():
                 exit()
             case _:
                 print("Invalid selection. Please enter 1, 2, 3, 4, 5, 6 or 7.")
-
+#this is the main function that allows the user to sign in as an admin, user, or just exit
 def main():
     while True:
-        print(" MAC ACCESS MENU ".center(120, '-'))
-        print("1. Sign In")
-        print("2. Exit")
-        print("-" * 120)
-        sign_in_choice = input("Enter your selection: ")
-        match sign_in_choice:
-            case '1':
-                sign_in()
-            case '2':
+        db = permission_matrix('MAC.txt')
+        print(" MAC ACCESS MENU ".center(120,'-'))
+        username_entry = input("Enter a Username from the MAC.txt File | 'admin' for the admin menu | 'exit' to Exit:\n").strip()
+        match username_entry:
+            case _ if username_entry in db:
+                print('-' * 120)
+                print(f" Access Granted. Welcome: {username_entry} ".center(120, '-'))
+                print("-" * 120)
+                regular_user_menu(username_entry, db[username_entry])
+            case _ if username_entry.lower() == 'admin':
+                print('-' * 120)
+                print("Admin Access Granted.")
+                admin_menu()
+            case 'exit':
                 print("[TERMINATING SESSION]".center(120, '*'))
                 exit()
             case _:
-                print("Invalid entry. Please Enter 1, 2.")
-
+                print("User not found.")
+#calling of the main function
 main()
 
     
